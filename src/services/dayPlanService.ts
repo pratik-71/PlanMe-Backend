@@ -61,11 +61,17 @@ export class DayPlanService {
    */
   static async getUserDayPlans(userId: string): Promise<DayPlan[]> {
     try {
+      console.log('🚨 DEBUG: getUserDayPlans called with userId:', userId);
+      console.log('🚨 DEBUG: Querying table:', TABLES.DAY_PLANS);
+      
       const { data, error } = await supabase
         .from(TABLES.DAY_PLANS)
         .select('*')
         .eq('user_id', userId)
         .order('selected_date', { ascending: false });
+
+      console.log('🚨 DEBUG: getUserDayPlans result:', JSON.stringify(data, null, 2));
+      console.log('🚨 DEBUG: getUserDayPlans error:', error);
 
       if (error) {
         throw new AppError(`Failed to fetch day plans: ${error.message}`, 500);
@@ -73,7 +79,7 @@ export class DayPlanService {
 
       return data || [];
     } catch (error) {
-      console.error('DayPlanService.getUserDayPlans error:', error);
+      console.error('🚨 DEBUG: DayPlanService.getUserDayPlans error:', error);
       throw error;
     }
   }
@@ -181,6 +187,15 @@ export class DailyPlanService {
     try {
       console.log('🚨 DEBUG: getTodayPlan called with userId:', userId, 'date:', date);
       
+      // First, let's check what data exists for this user
+      const { data: allUserPlans, error: allError } = await supabase
+        .from(TABLES.USER_DAILY_PLANS)
+        .select('*')
+        .eq('user_id', userId);
+      
+      console.log('🚨 DEBUG: All user plans:', JSON.stringify(allUserPlans, null, 2));
+      console.log('🚨 DEBUG: All user plans error:', allError);
+      
       const { data, error } = await supabase
         .from(TABLES.USER_DAILY_PLANS)
         .select('*')
@@ -189,6 +204,7 @@ export class DailyPlanService {
         .single();
 
       console.log('🚨 DEBUG: Supabase query result:', { data, error });
+      console.log('🚨 DEBUG: Query details - userId:', userId, 'date:', date, 'table:', TABLES.USER_DAILY_PLANS);
 
       if (error && error.code !== 'PGRST116') {
         console.log('🚨 DEBUG: Supabase error:', error);
