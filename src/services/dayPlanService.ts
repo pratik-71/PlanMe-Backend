@@ -179,6 +179,8 @@ export class DailyPlanService {
    */
   static async getTodayPlan(userId: string, date: string): Promise<DailyPlan | null> {
     try {
+      console.log('🚨 DEBUG: getTodayPlan called with userId:', userId, 'date:', date);
+      
       const { data, error } = await supabase
         .from(TABLES.USER_DAILY_PLANS)
         .select('*')
@@ -186,13 +188,17 @@ export class DailyPlanService {
         .eq('plan_date', date)
         .single();
 
+      console.log('🚨 DEBUG: Supabase query result:', { data, error });
+
       if (error && error.code !== 'PGRST116') {
+        console.log('🚨 DEBUG: Supabase error:', error);
         throw new AppError(`Failed to fetch today plan: ${error.message}`, 500);
       }
 
+      console.log('🚨 DEBUG: Returning data:', data);
       return data;
     } catch (error) {
-      console.error('DailyPlanService.getTodayPlan error:', error);
+      console.error('🚨 DEBUG: DailyPlanService.getTodayPlan error:', error);
       throw error;
     }
   }
