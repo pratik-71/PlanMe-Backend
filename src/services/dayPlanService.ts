@@ -164,7 +164,6 @@ export class DailyPlanService {
         .from(TABLES.USER_DAILY_PLANS)
         .insert({
           ...dailyPlan,
-          created_at: new Date().toISOString(),
         })
         .select()
         .single();
@@ -185,29 +184,16 @@ export class DailyPlanService {
    */
   static async getTodayPlan(userId: string, date: string): Promise<DailyPlan | null> {
     try {
-      console.log('🚨 DEBUG: getTodayPlan called with userId:', userId, 'date:', date);
       
       // First, let's check what data exists for this user
-      const { data: allUserPlans, error: allError } = await supabase
+      const { data: allUserPlans } = await supabase
         .from(TABLES.USER_DAILY_PLANS)
         .select('*')
         .eq('user_id', userId);
       
-      console.log('🚨 DEBUG: All user plans:', JSON.stringify(allUserPlans, null, 2));
-      console.log('🚨 DEBUG: All user plans error:', allError);
       
       // Show what dates we have in the database
       if (allUserPlans && allUserPlans.length > 0) {
-        console.log('🚨 DEBUG: Available plan dates in database:');
-        allUserPlans.forEach((plan, index) => {
-          console.log(`🚨 DEBUG: Plan ${index + 1}:`, {
-            id: plan.id,
-            plan_date: plan.plan_date,
-            plan_name: plan.plan_name,
-            user_id: plan.user_id,
-            reminders_count: plan.reminders ? (Array.isArray(plan.reminders) ? plan.reminders.length : 'not array') : 'null'
-          });
-        });
       }
       
       // Convert date to timestamp format for comparison
@@ -215,14 +201,6 @@ export class DailyPlanService {
       const startOfDay = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate());
       const endOfDay = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate() + 1);
       
-      console.log('🚨 DEBUG: Input date:', date);
-      console.log('🚨 DEBUG: Target date object:', targetDate);
-      console.log('🚨 DEBUG: Start of day:', startOfDay);
-      console.log('🚨 DEBUG: End of day:', endOfDay);
-      console.log('🚨 DEBUG: Searching for date range:', {
-        startOfDay: startOfDay.toISOString(),
-        endOfDay: endOfDay.toISOString()
-      });
       
       // Try exact date match first
       const { data: exactData, error: exactError } = await supabase
@@ -231,14 +209,12 @@ export class DailyPlanService {
         .eq('user_id', userId)
         .eq('plan_date', startOfDay.toISOString());
         
-      console.log('🚨 DEBUG: Exact date match result:', { exactData, exactError });
       
       // If no exact match, try range query
       let data = exactData;
       let error = exactError;
       
       if (exactError || !exactData || exactData.length === 0) {
-        console.log('🚨 DEBUG: No exact match, trying range query...');
         const rangeResult = await supabase
           .from(TABLES.USER_DAILY_PLANS)
           .select('*')
@@ -248,36 +224,28 @@ export class DailyPlanService {
           
         data = rangeResult.data;
         error = rangeResult.error;
-        console.log('🚨 DEBUG: Range query result:', { data, error });
       }
       
       // Handle multiple results - take the first one
       if (data && Array.isArray(data) && data.length > 0) {
-        console.log('🚨 DEBUG: Found multiple results, taking the first one:', data[0]);
         data = data[0];
       } else if (data && Array.isArray(data) && data.length === 0) {
-        console.log('🚨 DEBUG: No results found in array');
         data = null;
       }
 
-      console.log('🚨 DEBUG: Supabase query result:', { data, error });
-      console.log('🚨 DEBUG: Query details - userId:', userId, 'date:', date, 'table:', TABLES.USER_DAILY_PLANS);
 
       if (error && error.code !== 'PGRST116') {
-        console.log('🚨 DEBUG: Supabase error:', error);
         throw new AppError(`Failed to fetch today plan: ${error.message}`, 500);
       }
       
       // PGRST116 means no rows found, which is not an error for our use case
       if (error && error.code === 'PGRST116') {
-        console.log('🚨 DEBUG: No rows found (PGRST116), returning null');
         return null;
       }
 
-      console.log('🚨 DEBUG: Returning data:', data);
       return data as DailyPlan | null;
     } catch (error) {
-      console.error('🚨 DEBUG: DailyPlanService.getTodayPlan error:', error);
+      console.error('DailyPlanService.getTodayPlan error:', error);
       throw error;
     }
   }
@@ -291,7 +259,6 @@ export class DailyPlanService {
         .from(TABLES.USER_DAILY_PLANS)
         .update({
           reminders,
-          updated_at: new Date().toISOString(),
         })
         .eq('id', planId)
         .select()
