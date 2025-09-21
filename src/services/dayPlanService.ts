@@ -196,11 +196,22 @@ export class DailyPlanService {
       console.log('🚨 DEBUG: All user plans:', JSON.stringify(allUserPlans, null, 2));
       console.log('🚨 DEBUG: All user plans error:', allError);
       
+      // Convert date to timestamp format for comparison
+      const targetDate = new Date(date);
+      const startOfDay = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate());
+      const endOfDay = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate() + 1);
+      
+      console.log('🚨 DEBUG: Searching for date range:', {
+        startOfDay: startOfDay.toISOString(),
+        endOfDay: endOfDay.toISOString()
+      });
+      
       const { data, error } = await supabase
         .from(TABLES.USER_DAILY_PLANS)
         .select('*')
         .eq('user_id', userId)
-        .eq('plan_date', date)
+        .gte('plan_date', startOfDay.toISOString())
+        .lt('plan_date', endOfDay.toISOString())
         .single();
 
       console.log('🚨 DEBUG: Supabase query result:', { data, error });
