@@ -196,23 +196,62 @@ export class DailyPlanService {
       console.log('🚨 DEBUG: All user plans:', JSON.stringify(allUserPlans, null, 2));
       console.log('🚨 DEBUG: All user plans error:', allError);
       
+      // Show what dates we have in the database
+      if (allUserPlans && allUserPlans.length > 0) {
+        console.log('🚨 DEBUG: Available plan dates in database:');
+        allUserPlans.forEach((plan, index) => {
+          console.log(`🚨 DEBUG: Plan ${index + 1}:`, {
+            id: plan.id,
+            plan_date: plan.plan_date,
+            plan_name: plan.plan_name,
+            user_id: plan.user_id,
+            reminders_count: plan.reminders ? (Array.isArray(plan.reminders) ? plan.reminders.length : 'not array') : 'null'
+          });
+        });
+      }
+      
       // Convert date to timestamp format for comparison
       const targetDate = new Date(date);
       const startOfDay = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate());
       const endOfDay = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate() + 1);
       
+      console.log('🚨 DEBUG: Input date:', date);
+      console.log('🚨 DEBUG: Target date object:', targetDate);
+      console.log('🚨 DEBUG: Start of day:', startOfDay);
+      console.log('🚨 DEBUG: End of day:', endOfDay);
       console.log('🚨 DEBUG: Searching for date range:', {
         startOfDay: startOfDay.toISOString(),
         endOfDay: endOfDay.toISOString()
       });
       
-      const { data, error } = await supabase
+      // Try exact date match first
+      const { data: exactData, error: exactError } = await supabase
         .from(TABLES.USER_DAILY_PLANS)
         .select('*')
         .eq('user_id', userId)
-        .gte('plan_date', startOfDay.toISOString())
-        .lt('plan_date', endOfDay.toISOString())
+        .eq('plan_date', startOfDay.toISOString())
         .single();
+        
+      console.log('🚨 DEBUG: Exact date match result:', { exactData, exactError });
+      
+      // If no exact match, try range query
+      let data = exactData;
+      let error = exactError;
+      
+      if (exactError && exactError.code === 'PGRST116') {
+        console.log('🚨 DEBUG: No exact match, trying range query...');
+        const rangeResult = await supabase
+          .from(TABLES.USER_DAILY_PLANS)
+          .select('*')
+          .eq('user_id', userId)
+          .gte('plan_date', startOfDay.toISOString())
+          .lt('plan_date', endOfDay.toISOString())
+          .single();
+          
+        data = rangeResult.data;
+        error = rangeResult.error;
+        console.log('🚨 DEBUG: Range query result:', { data, error });
+      }
 
       console.log('🚨 DEBUG: Supabase query result:', { data, error });
       console.log('🚨 DEBUG: Query details - userId:', userId, 'date:', date, 'table:', TABLES.USER_DAILY_PLANS);
