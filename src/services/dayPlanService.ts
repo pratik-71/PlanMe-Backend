@@ -229,8 +229,7 @@ export class DailyPlanService {
         .from(TABLES.USER_DAILY_PLANS)
         .select('*')
         .eq('user_id', userId)
-        .eq('plan_date', startOfDay.toISOString())
-        .single();
+        .eq('plan_date', startOfDay.toISOString());
         
       console.log('🚨 DEBUG: Exact date match result:', { exactData, exactError });
       
@@ -238,19 +237,27 @@ export class DailyPlanService {
       let data = exactData;
       let error = exactError;
       
-      if (exactError && exactError.code === 'PGRST116') {
+      if (exactError || !exactData || exactData.length === 0) {
         console.log('🚨 DEBUG: No exact match, trying range query...');
         const rangeResult = await supabase
           .from(TABLES.USER_DAILY_PLANS)
           .select('*')
           .eq('user_id', userId)
           .gte('plan_date', startOfDay.toISOString())
-          .lt('plan_date', endOfDay.toISOString())
-          .single();
+          .lt('plan_date', endOfDay.toISOString());
           
         data = rangeResult.data;
         error = rangeResult.error;
         console.log('🚨 DEBUG: Range query result:', { data, error });
+      }
+      
+      // Handle multiple results - take the first one
+      if (data && Array.isArray(data) && data.length > 0) {
+        console.log('🚨 DEBUG: Found multiple results, taking the first one:', data[0]);
+        data = data[0];
+      } else if (data && Array.isArray(data) && data.length === 0) {
+        console.log('🚨 DEBUG: No results found in array');
+        data = null;
       }
 
       console.log('🚨 DEBUG: Supabase query result:', { data, error });
@@ -260,9 +267,15 @@ export class DailyPlanService {
         console.log('🚨 DEBUG: Supabase error:', error);
         throw new AppError(`Failed to fetch today plan: ${error.message}`, 500);
       }
+      
+      // PGRST116 means no rows found, which is not an error for our use case
+      if (error && error.code === 'PGRST116') {
+        console.log('🚨 DEBUG: No rows found (PGRST116), returning null');
+        return null;
+      }
 
       console.log('🚨 DEBUG: Returning data:', data);
-      return data;
+      return data as DailyPlan | null;
     } catch (error) {
       console.error('🚨 DEBUG: DailyPlanService.getTodayPlan error:', error);
       throw error;
