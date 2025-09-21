@@ -94,7 +94,7 @@ npm run lint:fix
 
 ### Daily Plans
 - `POST /api/addPlan` - Add daily plan with reminders
-- `GET /api/getTodayPlan` - Get today's plan for a user
+- `GET /api/getAllPlansForDate` - Get all plans for a specific date
 - `PUT /api/updatePlan` - Update plan (for subgoal status changes)
 - `GET /api/daily-plans/:userId` - Get user's daily plans
 

@@ -180,27 +180,14 @@ export class DailyPlanService {
   }
 
   /**
-   * Get today's plan for a user
+   * Get all plans for a specific date for a user
    */
-  static async getTodayPlan(userId: string, date: string): Promise<DailyPlan | null> {
+  static async getAllPlansForDate(userId: string, date: string): Promise<DailyPlan[]> {
     try {
-      
-      // First, let's check what data exists for this user
-      const { data: allUserPlans } = await supabase
-        .from(TABLES.USER_DAILY_PLANS)
-        .select('*')
-        .eq('user_id', userId);
-      
-      
-      // Show what dates we have in the database
-      if (allUserPlans && allUserPlans.length > 0) {
-      }
-      
       // Convert date to timestamp format for comparison
       const targetDate = new Date(date);
       const startOfDay = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate());
       const endOfDay = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate() + 1);
-      
       
       // Try exact date match first
       const { data: exactData, error: exactError } = await supabase
@@ -209,7 +196,6 @@ export class DailyPlanService {
         .eq('user_id', userId)
         .eq('plan_date', startOfDay.toISOString());
         
-      
       // If no exact match, try range query
       let data = exactData;
       let error = exactError;
@@ -225,30 +211,23 @@ export class DailyPlanService {
         data = rangeResult.data;
         error = rangeResult.error;
       }
-      
-      // Handle multiple results - take the first one
-      if (data && Array.isArray(data) && data.length > 0) {
-        data = data[0];
-      } else if (data && Array.isArray(data) && data.length === 0) {
-        data = null;
-      }
-
 
       if (error && error.code !== 'PGRST116') {
-        throw new AppError(`Failed to fetch today plan: ${error.message}`, 500);
+        throw new AppError(`Failed to fetch plans for date: ${error.message}`, 500);
       }
       
       // PGRST116 means no rows found, which is not an error for our use case
       if (error && error.code === 'PGRST116') {
-        return null;
+        return [];
       }
 
-      return data as DailyPlan | null;
+      return (data as DailyPlan[]) || [];
     } catch (error) {
-      console.error('DailyPlanService.getTodayPlan error:', error);
+      console.error('DailyPlanService.getAllPlansForDate error:', error);
       throw error;
     }
   }
+
 
   /**
    * Update plan (for subgoal status changes)

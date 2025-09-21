@@ -12,8 +12,8 @@ const router = Router();
 // POST /addPlan - Add daily plan with reminders
 router.post('/addPlan', validateDailyPlan, DailyPlanController.addPlan);
 
-// GET /getTodayPlan - Get today's plan for a user
-router.get('/getTodayPlan', validateQueryParams(['userId', 'date']), DailyPlanController.getTodayPlan);
+// GET /getAllPlansForDate - Get all plans for a specific date
+router.get('/getAllPlansForDate', validateQueryParams(['userId', 'date']), DailyPlanController.getAllPlansForDate);
 
 // PUT /updatePlan - Update plan (for subgoal status changes)
 router.put('/updatePlan', validatePlanUpdate, DailyPlanController.updatePlan);

@@ -144,18 +144,26 @@ export class DailyPlanController {
     });
   });
 
+
   /**
-   * Get today's plan for a user
-   * GET /getTodayPlan
+   * Get all plans for a specific date
+   * GET /getAllPlansForDate
    */
-  static getTodayPlan = asyncHandler(async (req: Request, res: Response) => {
+  static getAllPlansForDate = asyncHandler(async (req: Request, res: Response) => {
     const { userId, date } = req.query;
 
-    const plan = await DailyPlanService.getTodayPlan(userId as string, date as string);
+    if (!userId || !date) {
+      return res.status(400).json({
+        success: false,
+        error: 'User ID and date are required',
+      });
+    }
 
-    res.json({
+    const plans = await DailyPlanService.getAllPlansForDate(userId as string, date as string);
+
+    return res.json({
       success: true,
-      plan,
+      plans,
     });
   });
 
