@@ -8,7 +8,7 @@ export declare class DayPlanController {
 }
 export declare class DailyPlanController {
     static addPlan: (req: Request, res: Response, next: import("express").NextFunction) => void;
-    static getTodayPlan: (req: Request, res: Response, next: import("express").NextFunction) => void;
+    static getAllPlansForDate: (req: Request, res: Response, next: import("express").NextFunction) => void;
     static updatePlan: (req: Request, res: Response, next: import("express").NextFunction) => void;
     static getUserDailyPlans: (req: Request, res: Response, next: import("express").NextFunction) => void;
 }

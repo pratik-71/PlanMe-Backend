@@ -26,18 +26,22 @@ class DayPlanService {
     }
     static async getUserDayPlans(userId) {
         try {
+            console.log('🚨 DEBUG: getUserDayPlans called with userId:', userId);
+            console.log('🚨 DEBUG: Querying table:', database_1.TABLES.DAY_PLANS);
             const { data, error } = await database_1.supabase
                 .from(database_1.TABLES.DAY_PLANS)
                 .select('*')
                 .eq('user_id', userId)
                 .order('selected_date', { ascending: false });
+            console.log('🚨 DEBUG: getUserDayPlans result:', JSON.stringify(data, null, 2));
+            console.log('🚨 DEBUG: getUserDayPlans error:', error);
             if (error) {
                 throw new errorHandler_1.AppError(`Failed to fetch day plans: ${error.message}`, 500);
             }
             return data || [];
         }
         catch (error) {
-            console.error('DayPlanService.getUserDayPlans error:', error);
+            console.error('🚨 DEBUG: DayPlanService.getUserDayPlans error:', error);
             throw error;
         }
     }
@@ -104,7 +108,6 @@ class DailyPlanService {
                 .from(database_1.TABLES.USER_DAILY_PLANS)
                 .insert({
                 ...dailyPlan,
-                created_at: new Date().toISOString(),
             })
                 .select()
                 .single();
@@ -118,21 +121,38 @@ class DailyPlanService {
             throw error;
         }
     }
-    static async getTodayPlan(userId, date) {
+    static async getAllPlansForDate(userId, date) {
         try {
-            const { data, error } = await database_1.supabase
+            const targetDate = new Date(date);
+            const startOfDay = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate());
+            const endOfDay = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate() + 1);
+            const { data: exactData, error: exactError } = await database_1.supabase
                 .from(database_1.TABLES.USER_DAILY_PLANS)
                 .select('*')
                 .eq('user_id', userId)
-                .eq('plan_date', date)
-                .single();
-            if (error && error.code !== 'PGRST116') {
-                throw new errorHandler_1.AppError(`Failed to fetch today plan: ${error.message}`, 500);
+                .eq('plan_date', startOfDay.toISOString());
+            let data = exactData;
+            let error = exactError;
+            if (exactError || !exactData || exactData.length === 0) {
+                const rangeResult = await database_1.supabase
+                    .from(database_1.TABLES.USER_DAILY_PLANS)
+                    .select('*')
+                    .eq('user_id', userId)
+                    .gte('plan_date', startOfDay.toISOString())
+                    .lt('plan_date', endOfDay.toISOString());
+                data = rangeResult.data;
+                error = rangeResult.error;
             }
-            return data;
+            if (error && error.code !== 'PGRST116') {
+                throw new errorHandler_1.AppError(`Failed to fetch plans for date: ${error.message}`, 500);
+            }
+            if (error && error.code === 'PGRST116') {
+                return [];
+            }
+            return data || [];
         }
         catch (error) {
-            console.error('DailyPlanService.getTodayPlan error:', error);
+            console.error('DailyPlanService.getAllPlansForDate error:', error);
             throw error;
         }
     }
@@ -142,7 +162,6 @@ class DailyPlanService {
                 .from(database_1.TABLES.USER_DAILY_PLANS)
                 .update({
                 reminders,
-                updated_at: new Date().toISOString(),
             })
                 .eq('id', planId)
                 .select()
@@ -171,6 +190,71 @@ class DailyPlanService {
         }
         catch (error) {
             console.error('DailyPlanService.getUserDailyPlans error:', error);
+            throw error;
+        }
+    }
+    static async getAllPlansForAllUsers(date) {
+        try {
+            const targetDate = new Date(date);
+            const startOfDay = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate());
+            const endOfDay = new Date(startOfDay);
+            endOfDay.setDate(endOfDay.getDate() + 1);
+            const { data, error } = await database_1.supabase
+                .from(database_1.TABLES.USER_DAILY_PLANS)
+                .select('*')
+                .gte('plan_date', startOfDay.toISOString())
+                .lt('plan_date', endOfDay.toISOString());
+            if (error && error.code !== 'PGRST116') {
+                throw new errorHandler_1.AppError(`Failed to fetch all plans for date: ${error.message}`, 500);
+            }
+            return data || [];
+        }
+        catch (error) {
+            console.error('DailyPlanService.getAllPlansForAllUsers error:', error);
+            throw error;
+        }
+    }
+    static async getAllPlansForYesterday(yesterdayISO) {
+        try {
+            const targetDate = new Date(yesterdayISO + 'T00:00:00Z');
+            const startOfDay = new Date(targetDate);
+            startOfDay.setUTCHours(0, 0, 0, 0);
+            const endOfDay = new Date(targetDate);
+            endOfDay.setUTCHours(23, 59, 59, 999);
+            const { data, error } = await database_1.supabase
+                .from(database_1.TABLES.USER_DAILY_PLANS)
+                .select('*')
+                .gte('plan_date', startOfDay.toISOString())
+                .lte('plan_date', endOfDay.toISOString())
+                .not('reminders', 'is', null);
+            if (error && error.code !== 'PGRST116') {
+                throw new errorHandler_1.AppError(`Failed to fetch plans for yesterday: ${error.message}`, 500);
+            }
+            return data || [];
+        }
+        catch (error) {
+            console.error('DailyPlanService.getAllPlansForYesterday error:', error);
+            throw error;
+        }
+    }
+    static async updatePlanCompletionStatus(planId, isCompleted) {
+        try {
+            const { data, error } = await database_1.supabase
+                .from(database_1.TABLES.USER_DAILY_PLANS)
+                .update({
+                isCompleted,
+                updated_at: new Date().toISOString(),
+            })
+                .eq('id', planId)
+                .select()
+                .single();
+            if (error) {
+                throw new errorHandler_1.AppError(`Failed to update plan completion status: ${error.message}`, 500);
+            }
+            return data;
+        }
+        catch (error) {
+            console.error('DailyPlanService.updatePlanCompletionStatus error:', error);
             throw error;
         }
     }

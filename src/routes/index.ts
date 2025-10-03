@@ -2,6 +2,7 @@ import { Router } from 'express';
 import userRoutes from './userRoutes';
 import dayPlanRoutes from './dayPlanRoutes';
 import dailyPlanRoutes from './dailyPlanRoutes';
+import schedulerRoutes from './schedulerRoutes';
 
 const router = Router();
 
@@ -18,6 +19,7 @@ router.get('/health', (_req, res) => {
 // API routes
 router.use('/user', userRoutes);
 router.use('/plan_day', dayPlanRoutes);
+router.use('/scheduler', schedulerRoutes);
 router.use('/', dailyPlanRoutes);
 
 export default router;

@@ -26,6 +26,7 @@ export interface DailyPlan {
   plan_name: string;
   plan_date: string;
   reminders: any[];
+  isCompleted?: boolean;
   created_at?: string;
   updated_at?: string;
 }
@@ -272,6 +273,108 @@ export class DailyPlanService {
       return data || [];
     } catch (error) {
       console.error('DailyPlanService.getUserDailyPlans error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get all plans for a specific date across all users (for scheduler)
+   * DEPRECATED: Use getAllPlansForYesterday instead for better performance
+   */
+  static async getAllPlansForAllUsers(date: string): Promise<DailyPlan[]> {
+    try {
+      const targetDate = new Date(date);
+      const startOfDay = new Date(
+        targetDate.getFullYear(),
+        targetDate.getMonth(),
+        targetDate.getDate(),
+      );
+      const endOfDay = new Date(startOfDay);
+      endOfDay.setDate(endOfDay.getDate() + 1);
+
+      const { data, error } = await supabase
+        .from(TABLES.USER_DAILY_PLANS)
+        .select('*')
+        .gte('plan_date', startOfDay.toISOString())
+        .lt('plan_date', endOfDay.toISOString());
+
+      if (error && error.code !== 'PGRST116') {
+        throw new AppError(
+          `Failed to fetch all plans for date: ${error.message}`,
+          500,
+        );
+      }
+
+      return (data as DailyPlan[]) || [];
+    } catch (error) {
+      console.error('DailyPlanService.getAllPlansForAllUsers error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * OPTIMIZED: Get yesterday's plans that need completion check
+   * Only fetches plans from yesterday with reminders
+   */
+  static async getAllPlansForYesterday(yesterdayISO: string): Promise<DailyPlan[]> {
+    try {
+      const targetDate = new Date(yesterdayISO + 'T00:00:00Z');
+      const startOfDay = new Date(targetDate);
+      startOfDay.setUTCHours(0, 0, 0, 0);
+      
+      const endOfDay = new Date(targetDate);
+      endOfDay.setUTCHours(23, 59, 59, 999);
+
+      // OPTIMIZATION: Only get plans that have reminders (not null/empty)
+      const { data, error } = await supabase
+        .from(TABLES.USER_DAILY_PLANS)
+        .select('*')
+        .gte('plan_date', startOfDay.toISOString())
+        .lte('plan_date', endOfDay.toISOString())
+        .not('reminders', 'is', null); // Filter out plans without reminders
+
+      if (error && error.code !== 'PGRST116') {
+        throw new AppError(
+          `Failed to fetch plans for yesterday: ${error.message}`,
+          500,
+        );
+      }
+
+      return (data as DailyPlan[]) || [];
+    } catch (error) {
+      console.error('DailyPlanService.getAllPlansForYesterday error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Update plan completion status
+   */
+  static async updatePlanCompletionStatus(
+    planId: number,
+    isCompleted: boolean,
+  ): Promise<DailyPlan> {
+    try {
+      const { data, error } = await supabase
+        .from(TABLES.USER_DAILY_PLANS)
+        .update({
+          isCompleted,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', planId)
+        .select()
+        .single();
+
+      if (error) {
+        throw new AppError(
+          `Failed to update plan completion status: ${error.message}`,
+          500,
+        );
+      }
+
+      return data;
+    } catch (error) {
+      console.error('DailyPlanService.updatePlanCompletionStatus error:', error);
       throw error;
     }
   }

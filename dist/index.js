@@ -9,6 +9,7 @@ const dotenv_1 = __importDefault(require("dotenv"));
 const database_1 = require("./config/database");
 const routes_1 = __importDefault(require("./routes"));
 const errorHandler_1 = require("./middleware/errorHandler");
+const dailyCompletionScheduler_1 = require("./services/dailyCompletionScheduler");
 dotenv_1.default.config({ path: './.env' });
 const app = (0, express_1.default)();
 const PORT = database_1.config.port;
@@ -30,6 +31,8 @@ app.listen(PORT, () => {
     console.log(`🚀 Backend running on port ${PORT}`);
     console.log(`📡 API available at http://localhost:${PORT}/api`);
     console.log(`🏥 Health check: http://localhost:${PORT}/api/health`);
+    dailyCompletionScheduler_1.DailyCompletionScheduler.start();
+    console.log(`⏰ Daily completion scheduler initialized`);
 });
 exports.default = app;
 //# sourceMappingURL=index.js.map

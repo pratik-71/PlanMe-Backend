@@ -21,6 +21,7 @@ export interface DailyPlan {
     plan_name: string;
     plan_date: string;
     reminders: any[];
+    isCompleted?: boolean;
     created_at?: string;
     updated_at?: string;
 }
@@ -33,8 +34,11 @@ export declare class DayPlanService {
 }
 export declare class DailyPlanService {
     static saveDailyPlan(dailyPlan: Omit<DailyPlan, 'id' | 'created_at' | 'updated_at'>): Promise<DailyPlan>;
-    static getTodayPlan(userId: string, date: string): Promise<DailyPlan | null>;
+    static getAllPlansForDate(userId: string, date: string): Promise<DailyPlan[]>;
     static updatePlan(planId: number, reminders: any[]): Promise<DailyPlan>;
     static getUserDailyPlans(userId: string): Promise<DailyPlan[]>;
+    static getAllPlansForAllUsers(date: string): Promise<DailyPlan[]>;
+    static getAllPlansForYesterday(yesterdayISO: string): Promise<DailyPlan[]>;
+    static updatePlanCompletionStatus(planId: number, isCompleted: boolean): Promise<DailyPlan>;
 }
 //# sourceMappingURL=dayPlanService.d.ts.map

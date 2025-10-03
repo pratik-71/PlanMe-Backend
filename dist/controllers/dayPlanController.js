@@ -104,12 +104,18 @@ DailyPlanController.addPlan = (0, errorHandler_1.asyncHandler)(async (req, res) 
         data: dailyPlan,
     });
 });
-DailyPlanController.getTodayPlan = (0, errorHandler_1.asyncHandler)(async (req, res) => {
+DailyPlanController.getAllPlansForDate = (0, errorHandler_1.asyncHandler)(async (req, res) => {
     const { userId, date } = req.query;
-    const plan = await dayPlanService_1.DailyPlanService.getTodayPlan(userId, date);
-    res.json({
+    if (!userId || !date) {
+        return res.status(400).json({
+            success: false,
+            error: 'User ID and date are required',
+        });
+    }
+    const plans = await dayPlanService_1.DailyPlanService.getAllPlansForDate(userId, date);
+    return res.json({
         success: true,
-        plan,
+        plans,
     });
 });
 DailyPlanController.updatePlan = (0, errorHandler_1.asyncHandler)(async (req, res) => {

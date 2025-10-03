@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import { config } from './config/database';
 import routes from './routes';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
+import { DailyCompletionScheduler } from './services/dailyCompletionScheduler';
 
 // Load environment variables
 dotenv.config({ path: './.env' });
@@ -38,6 +39,10 @@ app.listen(PORT, () => {
   console.log(`🚀 Backend running on port ${PORT}`);
   console.log(`📡 API available at http://localhost:${PORT}/api`);
   console.log(`🏥 Health check: http://localhost:${PORT}/api/health`);
+  
+  // Start the daily completion scheduler
+  DailyCompletionScheduler.start();
+  console.log(`⏰ Daily completion scheduler initialized`);
 });
 
 export default app;

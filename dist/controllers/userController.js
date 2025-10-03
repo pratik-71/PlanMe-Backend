@@ -8,6 +8,44 @@ class UserController {
 }
 exports.UserController = UserController;
 _a = UserController;
+UserController.googleAuth = (0, errorHandler_1.asyncHandler)(async (req, res) => {
+    const { idToken } = req.body;
+    if (!idToken) {
+        return res.status(400).json({
+            success: false,
+            error: 'Google ID token is required',
+        });
+    }
+    try {
+        const response = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${idToken}`);
+        const tokenInfo = await response.json();
+        if (!response.ok || tokenInfo.error) {
+            return res.status(401).json({
+                success: false,
+                error: 'Invalid Google token',
+            });
+        }
+        const userId = tokenInfo.sub;
+        const email = tokenInfo.email;
+        const name = tokenInfo.name || '';
+        const avatarUrl = tokenInfo.picture;
+        const result = await userService_1.UserService.checkOrCreateUser(email, userId, name);
+        return res.json({
+            success: true,
+            user: {
+                ...result.user,
+                avatar_url: avatarUrl,
+            },
+            token: idToken,
+        });
+    }
+    catch (error) {
+        return res.status(500).json({
+            success: false,
+            error: error.message || 'Failed to verify Google token',
+        });
+    }
+});
 UserController.checkUser = (0, errorHandler_1.asyncHandler)(async (req, res) => {
     const { user_id, name, email } = req.body;
     const result = await userService_1.UserService.checkOrCreateUser(email, user_id, name);
