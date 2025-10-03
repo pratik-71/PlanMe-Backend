@@ -4,6 +4,9 @@ import { validateUserCheck } from '../middleware/validation';
 
 const router = Router();
 
+// POST /user/google-auth - Verify Google token and authenticate
+router.post('/google-auth', UserController.googleAuth);
+
 // POST /user/check - Check if user exists, create if name provided
 router.post('/check', validateUserCheck, UserController.checkUser);
 
