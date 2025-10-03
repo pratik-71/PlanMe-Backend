@@ -36,6 +36,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.DailyCompletionScheduler = void 0;
 const cron = __importStar(require("node-cron"));
 const dayPlanService_1 = require("./dayPlanService");
+const userStreakService_1 = require("./userStreakService");
 class DailyCompletionScheduler {
     static start() {
         if (this.cronJob) {
@@ -43,19 +44,12 @@ class DailyCompletionScheduler {
             return;
         }
         this.cronJob = cron.schedule('0 2 * * *', async () => {
-            const now = new Date();
-            console.log(`🕐 Running daily completion check at ${now.toISOString()}...`);
+            console.log('🕐 Running daily completion check...');
             await this.checkAndUpdateCompletionStatus();
         }, {
             timezone: 'UTC',
         });
-        const nextRun = new Date();
-        nextRun.setUTCHours(2, 0, 0, 0);
-        if (nextRun < new Date()) {
-            nextRun.setDate(nextRun.getDate() + 1);
-        }
-        console.log('✅ Daily completion scheduler started');
-        console.log(`⏰ Next run: ${nextRun.toISOString()} (2 AM UTC)`);
+        console.log('✅ Daily completion scheduler started (2 AM UTC)');
     }
     static stop() {
         if (this.cronJob) {
@@ -69,26 +63,25 @@ class DailyCompletionScheduler {
         await this.checkAndUpdateCompletionStatus();
     }
     static async checkAndUpdateCompletionStatus() {
-        const startTime = Date.now();
         try {
             const now = new Date();
             const yesterday = new Date(now);
             yesterday.setUTCDate(yesterday.getUTCDate() - 1);
             yesterday.setUTCHours(0, 0, 0, 0);
             const yesterdayISO = yesterday.toISOString().slice(0, 10);
-            console.log(`\n📅 Checking plans for: ${yesterdayISO}`);
-            console.log(`🕐 Current time: ${now.toISOString()}`);
+            console.log(`📅 Checking plans for: ${yesterdayISO}`);
             const allPlans = await dayPlanService_1.DailyPlanService.getAllPlansForYesterday(yesterdayISO);
             if (!allPlans || allPlans.length === 0) {
                 console.log('ℹ️  No plans found for yesterday');
-                console.log(`⏱️  Completed in ${Date.now() - startTime}ms\n`);
                 return;
             }
-            console.log(`📋 Found ${allPlans.length} plans to process`);
+            console.log(`📋 Processing ${allPlans.length} plans...`);
             let updatedCount = 0;
             let completedPlansCount = 0;
             let incompletePlansCount = 0;
             let skippedCount = 0;
+            let streaksIncremented = 0;
+            let streaksDecremented = 0;
             for (const plan of allPlans) {
                 try {
                     if (!plan.reminders) {
@@ -101,7 +94,6 @@ class DailyCompletionScheduler {
                             reminders = JSON.parse(plan.reminders);
                         }
                         catch (e) {
-                            console.warn(`  ⚠️  Plan ${plan.id} has invalid reminders JSON, skipping`);
                             skippedCount++;
                             continue;
                         }
@@ -118,8 +110,18 @@ class DailyCompletionScheduler {
                     if (plan.isCompleted !== newCompletionStatus) {
                         await dayPlanService_1.DailyPlanService.updatePlanCompletionStatus(plan.id, newCompletionStatus);
                         updatedCount++;
-                        const statusEmoji = newCompletionStatus ? '✅' : '❌';
-                        console.log(`  ✓ Plan ${plan.id} (${plan.plan_name}) → ${newCompletionStatus ? 'COMPLETED' : 'INCOMPLETE'} ${statusEmoji}`);
+                        try {
+                            if (newCompletionStatus) {
+                                await userStreakService_1.UserStreakService.incrementStreak(plan.user_id);
+                                streaksIncremented++;
+                            }
+                            else {
+                                await userStreakService_1.UserStreakService.decrementStreak(plan.user_id);
+                                streaksDecremented++;
+                            }
+                        }
+                        catch (streakError) {
+                        }
                     }
                     if (newCompletionStatus) {
                         completedPlansCount++;
@@ -129,22 +131,13 @@ class DailyCompletionScheduler {
                     }
                 }
                 catch (error) {
-                    console.error(`  ❌ Error processing plan ${plan.id}:`, error);
+                    console.error(`Error processing plan ${plan.id}:`, error);
                 }
             }
-            const duration = Date.now() - startTime;
-            console.log('\n📊 Summary:');
-            console.log(`  • Plans found: ${allPlans.length}`);
-            console.log(`  • Plans updated: ${updatedCount}`);
-            console.log(`  • Plans skipped: ${skippedCount} (no reminders)`);
-            console.log(`  • Completed plans: ${completedPlansCount} ✅`);
-            console.log(`  • Incomplete plans: ${incompletePlansCount} ❌`);
-            console.log(`  • Duration: ${duration}ms`);
-            console.log('✅ Daily completion check finished\n');
+            console.log(`✅ Completed: ${updatedCount} plans updated, ${streaksIncremented} streaks +1, ${streaksDecremented} streaks -1`);
         }
         catch (error) {
-            const duration = Date.now() - startTime;
-            console.error(`❌ Error in daily completion check (${duration}ms):`, error);
+            console.error('Error in daily completion check:', error);
         }
     }
 }
