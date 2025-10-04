@@ -40,26 +40,21 @@ const userStreakService_1 = require("./userStreakService");
 class DailyCompletionScheduler {
     static start() {
         if (this.cronJob) {
-            console.log('⚠️  Daily completion scheduler is already running');
             return;
         }
         this.cronJob = cron.schedule('0 2 * * *', async () => {
-            console.log('🕐 Running daily completion check...');
             await this.checkAndUpdateCompletionStatus();
         }, {
             timezone: 'UTC',
         });
-        console.log('✅ Daily completion scheduler started (2 AM UTC)');
     }
     static stop() {
         if (this.cronJob) {
             this.cronJob.stop();
             this.cronJob = null;
-            console.log('🛑 Daily completion scheduler stopped');
         }
     }
     static async runNow() {
-        console.log('🔄 Manually triggering daily completion check...');
         await this.checkAndUpdateCompletionStatus();
     }
     static async checkAndUpdateCompletionStatus() {
@@ -69,13 +64,10 @@ class DailyCompletionScheduler {
             yesterday.setUTCDate(yesterday.getUTCDate() - 1);
             yesterday.setUTCHours(0, 0, 0, 0);
             const yesterdayISO = yesterday.toISOString().slice(0, 10);
-            console.log(`📅 Checking plans for: ${yesterdayISO}`);
             const allPlans = await dayPlanService_1.DailyPlanService.getAllPlansForYesterday(yesterdayISO);
             if (!allPlans || allPlans.length === 0) {
-                console.log('ℹ️  No plans found for yesterday');
                 return;
             }
-            console.log(`📋 Processing ${allPlans.length} plans...`);
             let updatedCount = 0;
             let completedPlansCount = 0;
             let incompletePlansCount = 0;
@@ -131,13 +123,10 @@ class DailyCompletionScheduler {
                     }
                 }
                 catch (error) {
-                    console.error(`Error processing plan ${plan.id}:`, error);
                 }
             }
-            console.log(`✅ Completed: ${updatedCount} plans updated, ${streaksIncremented} streaks +1, ${streaksDecremented} streaks -1`);
         }
         catch (error) {
-            console.error('Error in daily completion check:', error);
         }
     }
 }

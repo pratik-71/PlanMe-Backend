@@ -15,7 +15,6 @@ export class DailyCompletionScheduler {
    */
   static start(): void {
     if (this.cronJob) {
-      console.log('⚠️  Daily completion scheduler is already running');
       return;
     }
 
@@ -24,15 +23,12 @@ export class DailyCompletionScheduler {
     this.cronJob = cron.schedule(
       '0 2 * * *',
       async () => {
-        console.log('🕐 Running daily completion check...');
         await this.checkAndUpdateCompletionStatus();
       },
       {
         timezone: 'UTC', // Run at 2 AM UTC consistently
       },
     );
-
-    console.log('✅ Daily completion scheduler started (2 AM UTC)');
   }
 
   /**
@@ -42,7 +38,6 @@ export class DailyCompletionScheduler {
     if (this.cronJob) {
       this.cronJob.stop();
       this.cronJob = null;
-      console.log('🛑 Daily completion scheduler stopped');
     }
   }
 
@@ -50,7 +45,6 @@ export class DailyCompletionScheduler {
    * Manual trigger for testing
    */
   static async runNow(): Promise<void> {
-    console.log('🔄 Manually triggering daily completion check...');
     await this.checkAndUpdateCompletionStatus();
   }
 
@@ -67,19 +61,14 @@ export class DailyCompletionScheduler {
       yesterday.setUTCHours(0, 0, 0, 0);
       const yesterdayISO = yesterday.toISOString().slice(0, 10);
 
-      console.log(`📅 Checking plans for: ${yesterdayISO}`);
-
       // OPTIMIZATION: Only get plans from yesterday that might need updates
       const allPlans = await DailyPlanService.getAllPlansForYesterday(
         yesterdayISO,
       );
 
       if (!allPlans || allPlans.length === 0) {
-        console.log('ℹ️  No plans found for yesterday');
         return;
       }
-
-      console.log(`📋 Processing ${allPlans.length} plans...`);
 
       let updatedCount = 0;
       let completedPlansCount = 0;
@@ -155,15 +144,11 @@ export class DailyCompletionScheduler {
             incompletePlansCount++;
           }
         } catch (error) {
-          console.error(`Error processing plan ${plan.id}:`, error);
+          // Continue processing
         }
       }
-
-      console.log(
-        `✅ Completed: ${updatedCount} plans updated, ${streaksIncremented} streaks +1, ${streaksDecremented} streaks -1`,
-      );
     } catch (error) {
-      console.error('Error in daily completion check:', error);
+      // Silent fail
     }
   }
 }

@@ -20,19 +20,11 @@ app.use((0, cors_1.default)({
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept']
 }));
 app.use(express_1.default.json());
-app.use((req, _res, next) => {
-    console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
-    next();
-});
 app.use('/api', routes_1.default);
 app.use(errorHandler_1.notFoundHandler);
 app.use(errorHandler_1.errorHandler);
 app.listen(PORT, () => {
-    console.log(`🚀 Backend running on port ${PORT}`);
-    console.log(`📡 API available at http://localhost:${PORT}/api`);
-    console.log(`🏥 Health check: http://localhost:${PORT}/api/health`);
     dailyCompletionScheduler_1.DailyCompletionScheduler.start();
-    console.log(`⏰ Daily completion scheduler initialized`);
 });
 exports.default = app;
 //# sourceMappingURL=index.js.map

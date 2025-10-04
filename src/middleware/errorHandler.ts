@@ -17,7 +17,7 @@ export class AppError extends Error {
 // Error handling middleware
 export const errorHandler = (
   error: Error | AppError,
-  req: Request,
+  _req: Request,
   res: Response,
   _next: NextFunction
 ) => {
@@ -39,15 +39,6 @@ export const errorHandler = (
     statusCode = 400;
     message = error.message;
   }
-
-  // Log error for debugging
-  console.error('❌ Error:', {
-    message: error.message,
-    stack: error.stack,
-    url: req.url,
-    method: req.method,
-    timestamp: new Date().toISOString(),
-  });
 
   // Send error response
   res.status(statusCode).json({

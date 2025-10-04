@@ -73,7 +73,6 @@ export class UserService {
         isNew: true,
       };
     } catch (error) {
-      console.error('UserService.checkOrCreateUser error:', error);
       throw error;
     }
   }
@@ -95,7 +94,6 @@ export class UserService {
 
       return data;
     } catch (error) {
-      console.error('UserService.getUserById error:', error);
       throw error;
     }
   }
@@ -121,7 +119,6 @@ export class UserService {
 
       return data;
     } catch (error) {
-      console.error('UserService.updateUser error:', error);
       throw error;
     }
   }
@@ -142,7 +139,6 @@ export class UserService {
 
       return true;
     } catch (error) {
-      console.error('UserService.deleteUser error:', error);
       throw error;
     }
   }

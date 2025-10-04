@@ -29,7 +29,6 @@ class UserStreakService {
             return newStreak;
         }
         catch (error) {
-            console.error('UserStreakService.incrementStreak error:', error);
             throw error;
         }
     }
@@ -55,7 +54,6 @@ class UserStreakService {
             return newStreak;
         }
         catch (error) {
-            console.error('UserStreakService.decrementStreak error:', error);
             throw error;
         }
     }
@@ -70,7 +68,6 @@ class UserStreakService {
             }
         }
         catch (error) {
-            console.error('UserStreakService.resetStreak error:', error);
             throw error;
         }
     }
@@ -87,7 +84,6 @@ class UserStreakService {
             return user?.streak || 0;
         }
         catch (error) {
-            console.error('UserStreakService.getStreak error:', error);
             throw error;
         }
     }

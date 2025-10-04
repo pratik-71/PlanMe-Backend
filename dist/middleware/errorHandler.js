@@ -10,7 +10,7 @@ class AppError extends Error {
     }
 }
 exports.AppError = AppError;
-const errorHandler = (error, req, res, _next) => {
+const errorHandler = (error, _req, res, _next) => {
     let statusCode = 500;
     let message = 'Internal server error';
     if (error instanceof AppError) {
@@ -25,13 +25,6 @@ const errorHandler = (error, req, res, _next) => {
         statusCode = 400;
         message = error.message;
     }
-    console.error('❌ Error:', {
-        message: error.message,
-        stack: error.stack,
-        url: req.url,
-        method: req.method,
-        timestamp: new Date().toISOString(),
-    });
     res.status(statusCode).json({
         success: false,
         error: message,

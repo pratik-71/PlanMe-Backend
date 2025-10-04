@@ -3,6 +3,7 @@ export declare const TABLES: {
     readonly USERS: "User";
     readonly DAY_PLANS: "day_plans";
     readonly USER_DAILY_PLANS: "user_daily_plans";
+    readonly REMINDER_TEMPLATES: "reminder_templates";
 };
 export declare const config: {
     readonly supabaseUrl: string;

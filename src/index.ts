@@ -21,11 +21,11 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// Request logging middleware
-app.use((req, _res, next) => {
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
-  next();
-});
+// Request logging middleware (disabled for production)
+// app.use((req, _res, next) => {
+//   console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
+//   next();
+// });
 
 // Routes
 app.use('/api', routes);
@@ -36,13 +36,8 @@ app.use(errorHandler);
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`🚀 Backend running on port ${PORT}`);
-  console.log(`📡 API available at http://localhost:${PORT}/api`);
-  console.log(`🏥 Health check: http://localhost:${PORT}/api/health`);
-  
   // Start the daily completion scheduler
   DailyCompletionScheduler.start();
-  console.log(`⏰ Daily completion scheduler initialized`);
 });
 
 export default app;

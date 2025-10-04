@@ -52,7 +52,6 @@ export class DayPlanService {
 
       return data;
     } catch (error) {
-      console.error('DayPlanService.saveDayPlan error:', error);
       throw error;
     }
   }
@@ -62,17 +61,11 @@ export class DayPlanService {
    */
   static async getUserDayPlans(userId: string): Promise<DayPlan[]> {
     try {
-      console.log('🚨 DEBUG: getUserDayPlans called with userId:', userId);
-      console.log('🚨 DEBUG: Querying table:', TABLES.DAY_PLANS);
-      
       const { data, error } = await supabase
         .from(TABLES.DAY_PLANS)
         .select('*')
         .eq('user_id', userId)
         .order('selected_date', { ascending: false });
-
-      console.log('🚨 DEBUG: getUserDayPlans result:', JSON.stringify(data, null, 2));
-      console.log('🚨 DEBUG: getUserDayPlans error:', error);
 
       if (error) {
         throw new AppError(`Failed to fetch day plans: ${error.message}`, 500);
@@ -80,7 +73,6 @@ export class DayPlanService {
 
       return data || [];
     } catch (error) {
-      console.error('🚨 DEBUG: DayPlanService.getUserDayPlans error:', error);
       throw error;
     }
   }
@@ -102,7 +94,6 @@ export class DayPlanService {
 
       return data;
     } catch (error) {
-      console.error('DayPlanService.getDayPlan error:', error);
       throw error;
     }
   }
@@ -128,7 +119,6 @@ export class DayPlanService {
 
       return data;
     } catch (error) {
-      console.error('DayPlanService.updateDayPlan error:', error);
       throw error;
     }
   }
@@ -149,7 +139,6 @@ export class DayPlanService {
 
       return true;
     } catch (error) {
-      console.error('DayPlanService.deleteDayPlan error:', error);
       throw error;
     }
   }
@@ -175,7 +164,6 @@ export class DailyPlanService {
 
       return data;
     } catch (error) {
-      console.error('DailyPlanService.saveDailyPlan error:', error);
       throw error;
     }
   }
@@ -224,7 +212,6 @@ export class DailyPlanService {
 
       return (data as DailyPlan[]) || [];
     } catch (error) {
-      console.error('DailyPlanService.getAllPlansForDate error:', error);
       throw error;
     }
   }
@@ -250,7 +237,6 @@ export class DailyPlanService {
 
       return data;
     } catch (error) {
-      console.error('DailyPlanService.updatePlan error:', error);
       throw error;
     }
   }
@@ -272,7 +258,6 @@ export class DailyPlanService {
 
       return data || [];
     } catch (error) {
-      console.error('DailyPlanService.getUserDailyPlans error:', error);
       throw error;
     }
   }
@@ -307,7 +292,6 @@ export class DailyPlanService {
 
       return (data as DailyPlan[]) || [];
     } catch (error) {
-      console.error('DailyPlanService.getAllPlansForAllUsers error:', error);
       throw error;
     }
   }
@@ -342,7 +326,6 @@ export class DailyPlanService {
 
       return (data as DailyPlan[]) || [];
     } catch (error) {
-      console.error('DailyPlanService.getAllPlansForYesterday error:', error);
       throw error;
     }
   }
@@ -374,7 +357,6 @@ export class DailyPlanService {
 
       return data;
     } catch (error) {
-      console.error('DailyPlanService.updatePlanCompletionStatus error:', error);
       throw error;
     }
   }
