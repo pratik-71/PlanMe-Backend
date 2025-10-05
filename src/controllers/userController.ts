@@ -54,8 +54,10 @@ export class UserController {
       const name = tokenInfo.name || '';
       const avatarUrl = tokenInfo.picture;
       
-      // Convert Google user ID to UUID format for database compatibility
-      const userId = `google_${googleUserId}`;
+      // Generate a proper UUID from Google user ID
+      const crypto = require('crypto');
+      const hash = crypto.createHash('sha256').update(googleUserId).digest('hex');
+      const userId = `${hash.substring(0, 8)}-${hash.substring(8, 12)}-${hash.substring(12, 16)}-${hash.substring(16, 20)}-${hash.substring(20, 32)}`;
 
       console.log('Extracted user info:');
       console.log('- userId:', userId);
