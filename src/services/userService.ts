@@ -63,53 +63,37 @@ export class UserService {
 
       console.log('User does not exist');
       
-      // If name provided, create new user
-      if (name && userId) {
-        console.log('Creating new user...');
-        
-        // Generate a proper UUID for the user_id
-        const crypto = require('crypto');
-        const hash = crypto.createHash('sha256').update(userId + email).digest('hex');
-        const uuid = `${hash.substring(0, 8)}-${hash.substring(8, 12)}-${hash.substring(12, 16)}-${hash.substring(16, 20)}-${hash.substring(20, 32)}`;
-        
-        console.log('Generated UUID:', uuid);
-        
-        // Create user in our User table with generated UUID
-        // First disable foreign key constraint, then create user, then re-enable
-        const { error: disableError } = await supabase.rpc('disable_foreign_key_constraint');
-        if (disableError) {
-          console.log('Failed to disable foreign key constraint:', disableError.message);
-        }
-        
-        const { data: newUser, error: createError } = await supabase
-          .from(TABLES.USERS)
-          .insert([{ user_id: uuid, name, email }])
-          .select()
-          .single();
-          
-        // Re-enable foreign key constraint
-        const { error: enableError } = await supabase.rpc('enable_foreign_key_constraint');
-        if (enableError) {
-          console.log('Failed to re-enable foreign key constraint:', enableError.message);
-        }
+       // If name provided, create new user
+       if (name && userId) {
+         console.log('Creating new user...');
+         
+         // Use Google user ID directly - prefix with 'google_' to make it unique
+         const user_id = `google_${userId}`;
+         console.log('Using user_id:', user_id);
+         
+         const { data: newUser, error: createError } = await supabase
+           .from(TABLES.USERS)
+           .insert([{ user_id: user_id, name, email }])
+           .select()
+           .single();
 
-        console.log('Create user result:');
-        console.log('- newUser:', JSON.stringify(newUser, null, 2));
-        console.log('- createError:', JSON.stringify(createError, null, 2));
+         console.log('Create user result:');
+         console.log('- newUser:', JSON.stringify(newUser, null, 2));
+         console.log('- createError:', JSON.stringify(createError, null, 2));
 
-        if (createError) {
-          console.log('Failed to create user:', createError.message);
-          throw new AppError(`Failed to create user: ${createError.message}`, 500);
-        }
+         if (createError) {
+           console.log('Failed to create user:', createError.message);
+           throw new AppError(`Failed to create user: ${createError.message}`, 500);
+         }
 
-        console.log('New user created successfully');
-        console.log('=== USER SERVICE SUCCESS (NEW) ===');
-        return {
-          success: true,
-          user: newUser,
-          isNew: true,
-        };
-      }
+         console.log('New user created successfully');
+         console.log('=== USER SERVICE SUCCESS (NEW) ===');
+         return {
+           success: true,
+           user: newUser,
+           isNew: true,
+         };
+       }
 
       console.log('User does not exist and no name provided');
       console.log('=== USER SERVICE SUCCESS (NO NAME) ===');
