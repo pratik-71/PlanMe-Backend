@@ -36,10 +36,8 @@ class UserService {
             console.log('User does not exist');
             if (name && userId) {
                 console.log('Creating new user...');
-                const crypto = require('crypto');
-                const hash = crypto.createHash('sha256').update(userId + email).digest('hex');
-                const user_id = `${hash.substring(0, 8)}-${hash.substring(8, 12)}-${hash.substring(12, 16)}-${hash.substring(16, 20)}-${hash.substring(20, 32)}`;
-                console.log('Generated UUID:', user_id);
+                const user_id = userId;
+                console.log('Using Google user_id directly:', user_id);
                 const { data: newUser, error: createError } = await database_1.supabase
                     .from(database_1.TABLES.USERS)
                     .insert([{ user_id: user_id, name, email }])
