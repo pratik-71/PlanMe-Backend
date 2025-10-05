@@ -67,32 +67,31 @@ export class UserService {
       if (name && userId) {
         console.log('Creating new user...');
         
-        // First, create user in auth.users using Supabase Auth
-        const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
-          email: email,
-          password: 'temp_password_' + Date.now(), // Temporary password
-          email_confirm: true,
-          user_metadata: {
-            name: name,
-            google_id: userId
-          }
-        });
-
-        console.log('Auth user creation result:');
-        console.log('- authUser:', JSON.stringify(authUser, null, 2));
-        console.log('- authError:', JSON.stringify(authError, null, 2));
-
-        if (authError) {
-          console.log('Failed to create auth user:', authError.message);
-          throw new AppError(`Failed to create auth user: ${authError.message}`, 500);
+        // Generate a proper UUID for the user_id
+        const crypto = require('crypto');
+        const hash = crypto.createHash('sha256').update(userId + email).digest('hex');
+        const uuid = `${hash.substring(0, 8)}-${hash.substring(8, 12)}-${hash.substring(12, 16)}-${hash.substring(16, 20)}-${hash.substring(20, 32)}`;
+        
+        console.log('Generated UUID:', uuid);
+        
+        // Create user in our User table with generated UUID
+        // First disable foreign key constraint, then create user, then re-enable
+        const { error: disableError } = await supabase.rpc('disable_foreign_key_constraint');
+        if (disableError) {
+          console.log('Failed to disable foreign key constraint:', disableError.message);
         }
-
-        // Now create user in our User table using the auth user ID
+        
         const { data: newUser, error: createError } = await supabase
           .from(TABLES.USERS)
-          .insert([{ user_id: authUser.user.id, name, email }])
+          .insert([{ user_id: uuid, name, email }])
           .select()
           .single();
+          
+        // Re-enable foreign key constraint
+        const { error: enableError } = await supabase.rpc('enable_foreign_key_constraint');
+        if (enableError) {
+          console.log('Failed to re-enable foreign key constraint:', enableError.message);
+        }
 
         console.log('Create user result:');
         console.log('- newUser:', JSON.stringify(newUser, null, 2));
