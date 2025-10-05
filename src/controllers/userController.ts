@@ -49,10 +49,13 @@ export class UserController {
       console.log('Google token verification successful');
       
       // Extract user info from verified token
-      const userId = tokenInfo.sub; // Google's unique user ID
+      const googleUserId = tokenInfo.sub; // Google's unique user ID
       const email = tokenInfo.email;
       const name = tokenInfo.name || '';
       const avatarUrl = tokenInfo.picture;
+      
+      // Convert Google user ID to UUID format for database compatibility
+      const userId = `google_${googleUserId}`;
 
       console.log('Extracted user info:');
       console.log('- userId:', userId);
