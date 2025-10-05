@@ -36,9 +36,25 @@ class UserService {
             console.log('User does not exist');
             if (name && userId) {
                 console.log('Creating new user...');
+                const { data: authUser, error: authError } = await database_1.supabase.auth.admin.createUser({
+                    email: email,
+                    password: 'temp_password_' + Date.now(),
+                    email_confirm: true,
+                    user_metadata: {
+                        name: name,
+                        google_id: userId
+                    }
+                });
+                console.log('Auth user creation result:');
+                console.log('- authUser:', JSON.stringify(authUser, null, 2));
+                console.log('- authError:', JSON.stringify(authError, null, 2));
+                if (authError) {
+                    console.log('Failed to create auth user:', authError.message);
+                    throw new errorHandler_1.AppError(`Failed to create auth user: ${authError.message}`, 500);
+                }
                 const { data: newUser, error: createError } = await database_1.supabase
                     .from(database_1.TABLES.USERS)
-                    .insert([{ user_id: userId, name, email }])
+                    .insert([{ user_id: authUser.user.id, name, email }])
                     .select()
                     .single();
                 console.log('Create user result:');

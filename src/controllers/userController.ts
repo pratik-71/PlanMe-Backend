@@ -54,10 +54,8 @@ export class UserController {
       const name = tokenInfo.name || '';
       const avatarUrl = tokenInfo.picture;
       
-      // Generate a proper UUID from Google user ID
-      const crypto = require('crypto');
-      const hash = crypto.createHash('sha256').update(googleUserId).digest('hex');
-      const userId = `${hash.substring(0, 8)}-${hash.substring(8, 12)}-${hash.substring(12, 16)}-${hash.substring(16, 20)}-${hash.substring(20, 32)}`;
+      // Use the Google user ID directly as the user_id (Supabase will handle the auth)
+      const userId = googleUserId;
 
       console.log('Extracted user info:');
       console.log('- userId:', userId);

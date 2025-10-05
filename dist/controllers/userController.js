@@ -44,9 +44,7 @@ UserController.googleAuth = (0, errorHandler_1.asyncHandler)(async (req, res) =>
         const email = tokenInfo.email;
         const name = tokenInfo.name || '';
         const avatarUrl = tokenInfo.picture;
-        const crypto = require('crypto');
-        const hash = crypto.createHash('sha256').update(googleUserId).digest('hex');
-        const userId = `${hash.substring(0, 8)}-${hash.substring(8, 12)}-${hash.substring(12, 16)}-${hash.substring(16, 20)}-${hash.substring(20, 32)}`;
+        const userId = googleUserId;
         console.log('Extracted user info:');
         console.log('- userId:', userId);
         console.log('- email:', email);
