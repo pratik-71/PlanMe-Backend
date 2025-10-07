@@ -180,4 +180,23 @@ export class UserController {
       message: 'User deleted successfully',
     });
   });
+
+  /**
+   * Update user's daily protein goal
+   * PUT /user/:userId/protein-goal
+   */
+  static updateProteinGoal = asyncHandler(async (req: Request, res: Response) => {
+    const { userId } = req.params;
+    const { protein_goal } = req.body as { protein_goal?: number };
+
+    if (!userId) {
+      return res.status(400).json({ success: false, error: 'User ID is required' });
+    }
+    if (protein_goal === undefined || protein_goal === null || Number.isNaN(Number(protein_goal))) {
+      return res.status(400).json({ success: false, error: 'protein_goal (number) is required' });
+    }
+
+    const updated = await UserService.updateUser(userId, { protein_goal: Number(protein_goal) });
+    return res.json({ success: true, message: 'Protein goal updated', user: updated });
+  });
 }

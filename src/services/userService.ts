@@ -6,6 +6,8 @@ export interface User {
   name: string;
   email: string;
   id?: number;
+  streak?: number;
+  protein_goal?: number;
   created_at?: string;
   updated_at?: string;
 }

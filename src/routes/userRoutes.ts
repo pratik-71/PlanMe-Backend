@@ -16,6 +16,9 @@ router.get('/:userId', UserController.getUserById);
 // PUT /user/:userId - Update user
 router.put('/:userId', UserController.updateUser);
 
+// PUT /user/:userId/protein-goal - Update user's daily protein goal
+router.put('/:userId/protein-goal', UserController.updateProteinGoal);
+
 // DELETE /user/:userId - Delete user
 router.delete('/:userId', UserController.deleteUser);
 

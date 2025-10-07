@@ -17,6 +17,7 @@ export const TABLES = {
   DAY_PLANS: 'day_plans',
   USER_DAILY_PLANS: 'user_daily_plans',
   REMINDER_TEMPLATES: 'reminder_templates',
+  MISC: 'Misc',
 } as const;
 
 // Export configuration

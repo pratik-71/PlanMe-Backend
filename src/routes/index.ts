@@ -4,6 +4,7 @@ import dayPlanRoutes from './dayPlanRoutes';
 import dailyPlanRoutes from './dailyPlanRoutes';
 import schedulerRoutes from './schedulerRoutes';
 import templateRoutes from './templateRoutes';
+import miscRoutes from './miscRoutes';
 
 const router = Router();
 
@@ -22,6 +23,7 @@ router.use('/user', userRoutes);
 router.use('/plan_day', dayPlanRoutes);
 router.use('/scheduler', schedulerRoutes);
 router.use('/templates', templateRoutes);
+router.use('/misc', miscRoutes);
 router.use('/', dailyPlanRoutes);
 
 export default router;
