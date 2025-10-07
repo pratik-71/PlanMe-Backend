@@ -40,6 +40,11 @@ export class MiscService {
     if (error && error.code !== 'PGRST116') {
       throw new AppError(`Failed to fetch today's misc: ${error.message}`, 500);
     }
+    console.log('[MISC] getToday window IST->UTC', {
+      start: start.toISOString(),
+      end: end.toISOString(),
+      found: !!data,
+    });
     return data as MiscRow | null;
   }
 
@@ -61,6 +66,7 @@ export class MiscService {
         .select()
         .single();
       if (error) throw new AppError(`Failed to update protein: ${error.message}`, 500);
+      console.log('[MISC] update existing row', { id: existing.id, newProtein: updated.protein });
       return data as MiscRow;
     }
 
@@ -70,6 +76,7 @@ export class MiscService {
       .select()
       .single();
     if (error) throw new AppError(`Failed to create misc: ${error.message}`, 500);
+    console.log('[MISC] created new row', { id: (data as any)?.id, protein: addProtein });
     return data as MiscRow;
   }
 
@@ -99,6 +106,11 @@ export class MiscService {
     if (error && error.code !== 'PGRST116') {
       throw new AppError(`Failed to fetch protein history: ${error.message}`, 500);
     }
+    console.log('[MISC] history window IST->UTC', {
+      start: start.toISOString(),
+      end: end.toISOString(),
+      rows: (data || []).length,
+    });
 
     // Map to date => protein (assuming at most one row per day)
     const byDate: Record<string, number> = {};

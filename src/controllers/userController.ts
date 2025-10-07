@@ -188,6 +188,7 @@ export class UserController {
   static updateProteinGoal = asyncHandler(async (req: Request, res: Response) => {
     const { userId } = req.params;
     const { protein_goal } = req.body as { protein_goal?: number };
+    console.log('[USER] PUT protein-goal', { userId, protein_goal });
 
     if (!userId) {
       return res.status(400).json({ success: false, error: 'User ID is required' });
@@ -197,6 +198,7 @@ export class UserController {
     }
 
     const updated = await UserService.updateUser(userId, { protein_goal: Number(protein_goal) });
+    console.log('[USER] PUT protein-goal ->', updated?.protein_goal);
     return res.json({ success: true, message: 'Protein goal updated', user: updated });
   });
 }
