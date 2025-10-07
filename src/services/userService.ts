@@ -142,7 +142,6 @@ export class UserService {
         .from(TABLES.USERS)
         .update({
           ...updates,
-          updated_at: new Date().toISOString(),
         })
         .eq('user_id', userId)
         .select()

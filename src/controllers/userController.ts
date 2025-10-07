@@ -197,8 +197,13 @@ export class UserController {
       return res.status(400).json({ success: false, error: 'protein_goal (number) is required' });
     }
 
-    const updated = await UserService.updateUser(userId, { protein_goal: Number(protein_goal) });
-    console.log('[USER] PUT protein-goal ->', updated?.protein_goal);
-    return res.json({ success: true, message: 'Protein goal updated', user: updated });
+    try {
+      const updated = await UserService.updateUser(userId, { protein_goal: Number(protein_goal) });
+      console.log('[USER] PUT protein-goal ->', updated?.protein_goal);
+      return res.json({ success: true, message: 'Protein goal updated', user: updated });
+    } catch (e: any) {
+      console.log('[USER] PUT protein-goal ERROR', e?.message || e);
+      return res.status(500).json({ success: false, error: e?.message || 'Update failed' });
+    }
   });
 }
