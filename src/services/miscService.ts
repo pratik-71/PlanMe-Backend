@@ -15,10 +15,17 @@ export interface MiscRow {
 
 export class MiscService {
   static async getToday(userId: string): Promise<MiscRow | null> {
-    const start = new Date();
-    start.setUTCHours(0, 0, 0, 0);
-    const end = new Date(start);
-    end.setUTCHours(23, 59, 59, 999);
+    // Use India Standard Time (UTC+05:30) for day boundaries
+    const tzOffsetMinutes = 330; // IST
+    const now = new Date();
+    const local = new Date(now.getTime() + tzOffsetMinutes * 60 * 1000);
+    const localStart = new Date(local);
+    localStart.setHours(0, 0, 0, 0);
+    const localEnd = new Date(localStart);
+    localEnd.setHours(23, 59, 59, 999);
+    // Convert back to UTC instants for storage comparison
+    const start = new Date(localStart.getTime() - tzOffsetMinutes * 60 * 1000);
+    const end = new Date(localEnd.getTime() - tzOffsetMinutes * 60 * 1000);
 
     const { data, error } = await supabase
       .from(TABLES.MISC)
@@ -67,13 +74,19 @@ export class MiscService {
   }
 
   static async getProteinHistory(userId: string, days: number, offsetDays = 0) {
-    const now = new Date();
-    now.setUTCHours(23, 59, 59, 999);
-    const end = new Date(now);
-    end.setUTCDate(end.getUTCDate() - offsetDays);
-    const start = new Date(end);
-    start.setUTCDate(start.getUTCDate() - (days - 1));
-    start.setUTCHours(0, 0, 0, 0);
+    // India Standard Time boundaries
+    const tzOffsetMinutes = 330; // IST
+    const nowUtc = new Date();
+    const nowLocal = new Date(nowUtc.getTime() + tzOffsetMinutes * 60 * 1000);
+    nowLocal.setHours(23, 59, 59, 999);
+    const endLocal = new Date(nowLocal);
+    endLocal.setDate(endLocal.getDate() - offsetDays);
+    const startLocal = new Date(endLocal);
+    startLocal.setDate(startLocal.getDate() - (days - 1));
+    startLocal.setHours(0, 0, 0, 0);
+    // Convert to UTC instants for DB compare
+    const end = new Date(endLocal.getTime() - tzOffsetMinutes * 60 * 1000);
+    const start = new Date(startLocal.getTime() - tzOffsetMinutes * 60 * 1000);
 
     const { data, error } = await supabase
       .from(TABLES.MISC)
@@ -98,11 +111,16 @@ export class MiscService {
 
     const daysOut: Array<{ date: string; protein: number }> = [];
     for (let i = 0; i < days; i++) {
-      const d = new Date(end);
-      d.setUTCDate(end.getUTCDate() - i);
-      d.setUTCHours(0, 0, 0, 0);
-      const key = d.toISOString().slice(0, 10);
-      daysOut.push({ date: key, protein: byDate[key] || 0 });
+      const dl = new Date(endLocal);
+      dl.setDate(endLocal.getDate() - i);
+      dl.setHours(0, 0, 0, 0);
+      // For labels, use IST date string (YYYY-MM-DD)
+      const key = new Date(dl.getTime()).toISOString().slice(0, 10);
+      // But lookup uses UTC day keys from fetched rows; compute matching UTC key at 00:00 IST of that day
+      const utcKeyDate = new Date(dl.getTime() - tzOffsetMinutes * 60 * 1000);
+      const utcKey = utcKeyDate.toISOString().slice(0, 10);
+      const value = byDate[utcKey] ?? byDate[key] ?? 0;
+      daysOut.push({ date: key, protein: value });
     }
     return daysOut; // newest first
   }
