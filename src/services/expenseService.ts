@@ -1,4 +1,4 @@
-import { supabase, TABLES } from '../config/database';
+import { supabase } from '../config/database';
 import { AppError } from '../middleware/errorHandler';
 
 export interface ExpenseLog {

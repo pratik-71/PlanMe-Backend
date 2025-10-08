@@ -221,7 +221,6 @@ export class UserController {
       if (!user) {
         return res.status(404).json({ success: false, error: 'User not found' });
       }
-      // @ts-expect-error expense may not be typed on User
       const expense = (user as any)?.expense ?? [];
       return res.json({ success: true, data: { expense } });
     } catch (e: any) {
