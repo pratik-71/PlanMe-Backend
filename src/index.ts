@@ -47,14 +47,14 @@ const startSelfPing = () => {
       console.log(`[${timestamp}] Starting self-ping process...`);
       
       try {
-        // Method 1: Try internal health check first
-        const internalUrl = `http://localhost:${config.port}/api/health`;
-        console.log(`[${timestamp}] Attempting internal ping to: ${internalUrl}`);
+        // Use the actual deployed URL for self-ping
+        const pingUrl = `${appUrl}/api/health`;
+        console.log(`[${timestamp}] Attempting self-ping to: ${pingUrl}`);
         
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
         
-        const response = await fetch(internalUrl, {
+        const response = await fetch(pingUrl, {
           method: 'GET',
           signal: controller.signal,
           headers: {
@@ -66,47 +66,15 @@ const startSelfPing = () => {
         clearTimeout(timeoutId);
         
         if (response.ok) {
-          console.log(`[${timestamp}] Internal self-ping successful - server kept awake`);
-          return;
+          console.log(`[${timestamp}] Self-ping successful - server kept awake`);
         } else {
-          console.log(`[${timestamp}] Internal self-ping failed - status: ${response.status}`);
+          console.log(`[${timestamp}] Self-ping failed - status: ${response.status}`);
         }
       } catch (error) {
-        console.log(`[${timestamp}] Internal self-ping error:`, error instanceof Error ? error.message : 'Unknown error');
-      }
-      
-      // Method 2: Try external ping if internal fails
-      try {
-        const externalUrl = appUrl.includes('localhost') 
-          ? `https://planme-backend-eduf.onrender.com/api/health`
-          : `${appUrl}/api/health`;
-          
-        console.log(`[${timestamp}] Attempting external ping to: ${externalUrl}`);
+        console.log(`[${timestamp}] Self-ping error:`, error instanceof Error ? error.message : 'Unknown error');
         
-        const externalController = new AbortController();
-        const externalTimeoutId = setTimeout(() => externalController.abort(), 10000);
-        
-        const response = await fetch(externalUrl, {
-          method: 'GET',
-          signal: externalController.signal,
-          headers: {
-            'User-Agent': 'PlanMe-SelfPing/1.0',
-            'Connection': 'keep-alive',
-          },
-        });
-        
-        clearTimeout(externalTimeoutId);
-        
-        if (response.ok) {
-          console.log(`[${timestamp}] External self-ping successful - server kept awake`);
-        } else {
-          console.log(`[${timestamp}] External self-ping failed - status: ${response.status}`);
-        }
-      } catch (error) {
-        console.log(`[${timestamp}] External self-ping error:`, error instanceof Error ? error.message : 'Unknown error');
-        
-        // Method 3: Fallback - just log that server is alive
-        console.log(`[${timestamp}] Fallback: Server is alive and processing (no external ping needed)`);
+        // Fallback - just log that server is alive
+        console.log(`[${timestamp}] Fallback: Server is alive and processing (ping failed but server is running)`);
       }
     }, {
       timezone: 'UTC'
