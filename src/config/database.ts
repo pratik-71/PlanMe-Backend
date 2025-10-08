@@ -26,5 +26,5 @@ export const config = {
   supabaseAnonKey: SUPABASE_ANON_KEY,
   port: process.env['PORT'] || 3001,
   corsOrigin: process.env['CORS_ORIGIN'] || 'http://localhost:3000',
-  appUrl: process.env['APP_URL'] || 'http://localhost:3001',
+  appUrl: process.env['APP_URL'] || 'https://planme-backend-eduf.onrender.com',
 } as const;

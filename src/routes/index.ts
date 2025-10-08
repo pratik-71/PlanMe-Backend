@@ -11,12 +11,19 @@ const router = Router();
 
 // Health check endpoint
 router.get('/health', (_req, res) => {
-  res.json({
+  const healthData = {
     success: true,
     message: 'Backend API is running',
     timestamp: new Date().toISOString(),
     version: '1.0.0',
-  });
+    uptime: process.uptime(),
+    memory: process.memoryUsage(),
+    environment: process.env['NODE_ENV'] || 'development',
+    port: process.env['PORT'] || 3001,
+  };
+  
+  console.log(`[${new Date().toISOString()}] Health check accessed - server is alive`);
+  res.json(healthData);
 });
 
 // API routes
