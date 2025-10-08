@@ -8,6 +8,9 @@ export interface User {
   id?: number;
   streak?: number;
   protein_goal?: number;
+  // JSONB fields
+  expense?: any; // expense categories JSONB
+  bucket_list?: any;
   created_at?: string;
   updated_at?: string;
 }

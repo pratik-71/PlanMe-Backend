@@ -206,4 +206,48 @@ export class UserController {
       return res.status(500).json({ success: false, error: e?.message || 'Update failed' });
     }
   });
+
+  /**
+   * Get user's expense JSONB
+   * GET /user/:userId/expense
+   */
+  static getExpense = asyncHandler(async (req: Request, res: Response) => {
+    const { userId } = req.params;
+    if (!userId) {
+      return res.status(400).json({ success: false, error: 'User ID is required' });
+    }
+    try {
+      const user = await UserService.getUserById(userId);
+      if (!user) {
+        return res.status(404).json({ success: false, error: 'User not found' });
+      }
+      // @ts-expect-error expense may not be typed on User
+      const expense = (user as any)?.expense ?? [];
+      return res.json({ success: true, data: { expense } });
+    } catch (e: any) {
+      return res.status(500).json({ success: false, error: e?.message || 'Failed to load expense' });
+    }
+  });
+
+  /**
+   * Update user's expense JSONB
+   * PUT /user/:userId/expense { expense: any[] }
+   */
+  static updateExpense = asyncHandler(async (req: Request, res: Response) => {
+    const { userId } = req.params;
+    const { expense } = req.body as { expense?: any };
+    if (!userId) {
+      return res.status(400).json({ success: false, error: 'User ID is required' });
+    }
+    if (!Array.isArray(expense)) {
+      return res.status(400).json({ success: false, error: 'expense must be an array' });
+    }
+    try {
+      const updated = await UserService.updateUser(userId, { expense });
+      const outExpense = (updated as any)?.expense ?? [];
+      return res.json({ success: true, message: 'Expense updated', data: { expense: outExpense } });
+    } catch (e: any) {
+      return res.status(500).json({ success: false, error: e?.message || 'Failed to update expense' });
+    }
+  });
 }

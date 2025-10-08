@@ -6,6 +6,7 @@ import schedulerRoutes from './schedulerRoutes';
 import templateRoutes from './templateRoutes';
 import miscRoutes from './miscRoutes';
 import bucketListRoutes from './bucketListRoutes';
+import expenseRoutes from './expenseRoutes';
 
 const router = Router();
 
@@ -33,6 +34,7 @@ router.use('/scheduler', schedulerRoutes);
 router.use('/templates', templateRoutes);
 router.use('/misc', miscRoutes);
 router.use('/bucket-list', bucketListRoutes);
+router.use('/expenses', expenseRoutes);
 router.use('/', dailyPlanRoutes);
 
 export default router;

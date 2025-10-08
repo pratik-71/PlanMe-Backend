@@ -19,6 +19,10 @@ router.put('/:userId', UserController.updateUser);
 // PUT /user/:userId/protein-goal - Update user's daily protein goal
 router.put('/:userId/protein-goal', UserController.updateProteinGoal);
 
+// Expense JSONB on User
+router.get('/:userId/expense', UserController.getExpense);
+router.put('/:userId/expense', UserController.updateExpense);
+
 // DELETE /user/:userId - Delete user
 router.delete('/:userId', UserController.deleteUser);
 
