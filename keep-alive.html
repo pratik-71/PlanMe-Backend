@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PlanMe Keep-Alive Service</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background-color: #0056b3; }
+        .log {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 PlanMe Keep-Alive Service</h1>
+        <p>This service helps keep your Render backend server awake by pinging it regularly.</p>
+        
+        <div id="status" class="status info">Ready to start keep-alive service</div>
+        
+        <div>
+            <button onclick="startKeepAlive()">Start Keep-Alive</button>
+            <button onclick="stopKeepAlive()">Stop Keep-Alive</button>
+            <button onclick="testPing()">Test Ping Now</button>
+            <button onclick="clearLog()">Clear Log</button>
+        </div>
+        
+        <h3>Configuration</h3>
+        <div>
+            <label>Server URL: </label>
+            <input type="text" id="serverUrl" value="https://planme-backend-eduf.onrender.com" style="width: 300px;">
+        </div>
+        <div>
+            <label>Ping Interval (minutes): </label>
+            <input type="number" id="interval" value="10" min="1" max="60" style="width: 60px;">
+        </div>
+        
+        <h3>Activity Log</h3>
+        <div id="log" class="log"></div>
+    </div>
+
+    <script>
+        let keepAliveInterval = null;
+        const logElement = document.getElementById('log');
+        const statusElement = document.getElementById('status');
+        
+        function log(message) {
+            const timestamp = new Date().toLocaleString();
+            logElement.innerHTML += `[${timestamp}] ${message}\n`;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+        
+        function updateStatus(message, type = 'info') {
+            statusElement.textContent = message;
+            statusElement.className = `status ${type}`;
+        }
+        
+        async function pingServer() {
+            const serverUrl = document.getElementById('serverUrl').value;
+            const pingUrl = `${serverUrl}/api/health`;
+            
+            try {
+                log(`Pinging server: ${pingUrl}`);
+                const response = await fetch(pingUrl, {
+                    method: 'GET',
+                    headers: {
+                        'User-Agent': 'PlanMe-KeepAlive/1.0'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log(`✅ Ping successful - Server is alive (uptime: ${Math.round(data.uptime)}s)`);
+                    updateStatus('Server is alive and responsive', 'success');
+                    return true;
+                } else {
+                    log(`❌ Ping failed - Status: ${response.status}`);
+                    updateStatus(`Ping failed - Status: ${response.status}`, 'error');
+                    return false;
+                }
+            } catch (error) {
+                log(`❌ Ping error: ${error.message}`);
+                updateStatus(`Ping error: ${error.message}`, 'error');
+                return false;
+            }
+        }
+        
+        function startKeepAlive() {
+            if (keepAliveInterval) {
+                log('Keep-alive is already running');
+                return;
+            }
+            
+            const intervalMinutes = parseInt(document.getElementById('interval').value);
+            const intervalMs = intervalMinutes * 60 * 1000;
+            
+            log(`Starting keep-alive service (every ${intervalMinutes} minutes)`);
+            updateStatus(`Keep-alive running (every ${intervalMinutes} minutes)`, 'success');
+            
+            // Ping immediately
+            pingServer();
+            
+            // Set up interval
+            keepAliveInterval = setInterval(pingServer, intervalMs);
+        }
+        
+        function stopKeepAlive() {
+            if (keepAliveInterval) {
+                clearInterval(keepAliveInterval);
+                keepAliveInterval = null;
+                log('Keep-alive service stopped');
+                updateStatus('Keep-alive service stopped', 'info');
+            } else {
+                log('Keep-alive service is not running');
+            }
+        }
+        
+        function testPing() {
+            log('Manual ping test requested');
+            pingServer();
+        }
+        
+        function clearLog() {
+            logElement.innerHTML = '';
+            log('Log cleared');
+        }
+        
+        // Auto-start on page load
+        window.addEventListener('load', () => {
+            log('Keep-alive service loaded');
+            log('Click "Start Keep-Alive" to begin pinging your server');
+        });
+    </script>
+</body>
+</html>

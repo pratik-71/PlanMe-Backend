@@ -35,53 +35,41 @@ app.use('/api', routes);
 app.use(notFoundHandler);
 app.use(errorHandler);
 
-// Self-ping mechanism to keep server awake on Render free plan
-const startSelfPing = () => {
-  const appUrl = config.appUrl;
+// Simple and effective keep-alive mechanism for Render free plan
+const startKeepAlive = () => {
+  console.log('Starting keep-alive mechanism for Render free plan...');
   
-  // Add delay to ensure server is fully ready
-  setTimeout(() => {
-    // Ping every 10 minutes to prevent server sleep
-    cron.schedule('*/10 * * * *', async () => {
-      const timestamp = new Date().toISOString();
-      console.log(`[${timestamp}] Starting self-ping process...`);
-      
-      try {
-        // Use the actual deployed URL for self-ping
-        const pingUrl = `${appUrl}/api/health`;
-        console.log(`[${timestamp}] Attempting self-ping to: ${pingUrl}`);
-        
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000);
-        
-        const response = await fetch(pingUrl, {
-          method: 'GET',
-          signal: controller.signal,
-          headers: {
-            'User-Agent': 'PlanMe-SelfPing/1.0',
-            'Connection': 'keep-alive',
-          },
-        });
-        
-        clearTimeout(timeoutId);
-        
-        if (response.ok) {
-          console.log(`[${timestamp}] Self-ping successful - server kept awake`);
-        } else {
-          console.log(`[${timestamp}] Self-ping failed - status: ${response.status}`);
-        }
-      } catch (error) {
-        console.log(`[${timestamp}] Self-ping error:`, error instanceof Error ? error.message : 'Unknown error');
-        
-        // Fallback - just log that server is alive
-        console.log(`[${timestamp}] Fallback: Server is alive and processing (ping failed but server is running)`);
-      }
-    }, {
-      timezone: 'UTC'
-    });
+  // Keep server active every 10 minutes (Render sleeps after 15 minutes)
+  cron.schedule('*/10 * * * *', async () => {
+    const timestamp = new Date().toISOString();
+    console.log(`[${timestamp}] Keep-alive: Triggering server activity`);
     
-    console.log('Self-ping mechanism started - pinging every 10 minutes');
-  }, 30000); // Wait 30 seconds before starting pings
+    try {
+      // Create database activity to keep Supabase connection alive
+      const { supabase } = require('./config/database');
+      const { data, error } = await supabase
+        .from('User')
+        .select('id')
+        .limit(1);
+      
+      if (error) {
+        console.log(`[${timestamp}] Database keep-alive failed:`, error.message);
+      } else {
+        console.log(`[${timestamp}] Database keep-alive successful - connection active`);
+      }
+      
+      // Log memory usage to show activity
+      const memoryUsage = process.memoryUsage();
+      console.log(`[${timestamp}] Memory: ${Math.round(memoryUsage.heapUsed / 1024 / 1024)}MB`);
+      
+    } catch (error) {
+      console.log(`[${timestamp}] Keep-alive error:`, error instanceof Error ? error.message : 'Unknown error');
+    }
+  }, {
+    timezone: 'UTC'
+  });
+  
+  console.log('Keep-alive mechanism started - database activity every 10 minutes');
 };
 
 // Start server
@@ -91,8 +79,8 @@ app.listen(PORT, () => {
   // Start the daily completion scheduler
   DailyCompletionScheduler.start();
   
-  // Start self-ping mechanism to keep server awake
-  startSelfPing();
+  // Start enhanced keep-alive mechanism to prevent Render sleep
+  startKeepAlive();
 });
 
 export default app;

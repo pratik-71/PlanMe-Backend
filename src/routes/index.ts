@@ -27,6 +27,19 @@ router.get('/health', (_req, res) => {
   res.json(healthData);
 });
 
+// Keep-alive endpoint for external ping services
+router.get('/ping', (_req, res) => {
+  const timestamp = new Date().toISOString();
+  console.log(`[${timestamp}] Keep-alive ping received - server active`);
+  
+  res.json({
+    success: true,
+    message: 'Server is alive and responsive',
+    timestamp,
+    uptime: process.uptime(),
+  });
+});
+
 // API routes
 router.use('/user', userRoutes);
 router.use('/plan_day', dayPlanRoutes);
